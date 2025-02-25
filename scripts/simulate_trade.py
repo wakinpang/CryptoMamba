@@ -98,7 +98,7 @@ def get_args():
         "--trade_mode",
         type=str,
         default='smart',
-        choices={'smart', 'vanilla', 'no_strategy'},
+        choices={'smart', 'smart_w_short', 'vanilla', 'no_strategy'},
     )
 
     args = parser.parse_args()
@@ -123,6 +123,13 @@ def init_dirs(args, name):
         path = f'{ROOT}/Results/all/'
     if not os.path.isdir(path):
         os.makedirs(path)
+
+def max_drawdown(prices):
+    prices = np.array(prices)
+    peak = np.maximum.accumulate(prices)
+    drawdown = (prices - peak) / peak
+    mdd = drawdown.min()
+    return -mdd
 
 
 @torch.no_grad()
@@ -214,13 +221,13 @@ if __name__ == '__main__':
             shift = factors.get(model.y_key).get('min')
             data[model.y_key] = data[model.y_key] * scale + shift
 
-
         balance, balance_in_time = trade(data, time_key, timstamps, targets, preds, 
                                          balance=args.balance, mode=args.trade_mode, 
                                          risk=args.risk, y_key=model.y_key)
-
+        # raise ValueError(max_drawdown(balance_in_time))
 
         print(f'{conf} -- Final balance: {round(balance, 2)}')
+        print(f'{conf} -- Maximum Draw Down : {round(max_drawdown(balance_in_time) * 100, 2)}')
 
         label = conf.replace("_nv", "").replace("_v", "")
         if label == 'cmamba':
