@@ -74,7 +74,7 @@ To run the trading simulation, you can use the following command:
 python scripts/simulate_trade.py --config CONFIG_NAME --ckpt_path PATH_TO_CHECKPOINT --split SPLIT_NAME --trade_mode TRADE_ALGORITHM
 ```
 
-Where `SPLIT_NAME` is `train`, `val`, or `test` and `TRADE_ALGORITHM is` `smart` or `vanilla`.
+Where `SPLIT_NAME` is `train`, `val`, or `test` and `TRADE_ALGORITHM is` `smart` or `vanilla` or `smart_w_short`.
 
 ### Predict Next Day Price
 <p align="justify" > 
