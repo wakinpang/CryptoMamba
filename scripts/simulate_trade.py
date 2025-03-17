@@ -17,6 +17,15 @@ palette = sns.color_palette('muted')
 
 ROOT = io_tools.get_root(__file__, num_returns=2)
 
+LABEL_DICT = {
+    'cmamba': 'CryptoMamba',
+    'lstm': 'LSTM',
+    'lstm_bi': 'Bi-LSTM',
+    'gru': 'GRU',
+   'smamba': 'S-Mamba',
+    'itransformer': 'iTransformer',
+}
+
 def get_args():
     parser = ArgumentParser()
     parser.add_argument(
@@ -57,7 +66,7 @@ def get_args():
     )
     parser.add_argument(
         "--ckpt_path",
-        required=True,
+        default=None,
         type=str,
         help="Path to config file.",
     )
@@ -104,7 +113,9 @@ def get_args():
     args = parser.parse_args()
     return args
 
-def load_model(config, ckpt_path):
+def load_model(config, ckpt_path, config_name=None):
+    if ckpt_path is None:
+        ckpt_path = f'{ROOT}/checkpoints/{config_name}.ckpt'
     arch_config = io_tools.load_config_from_yaml('configs/models/archs.yaml')
     model_arch = config.get('model')
     model_config_path = f'{ROOT}/configs/models/{arch_config.get(model_arch)}'
@@ -165,13 +176,11 @@ def run_model(model, dataloader, factors=None):
 if __name__ == '__main__':
     args = get_args()
     init_dir_flag = False
+    colors = ['darkblue', 'yellowgreen', 'crimson', 'darkviolet', 'orange', 'magenta']
     if args.config == 'all':
-        config_list = ['cmamba_nv', 'lstm_nv', 'lstm_bi_nv', 'gru_nv', 'smamba_nv']
-        colors = ['darkblue', 'yellowgreen', 'crimson', 'darkviolet', 'orange']
-        init_dirs(args, 'all')
+        config_list = [x.replace('.ckpt', '') for x in os.listdir(f'{ROOT}/checkpoints/') if '_nv.ckpt' in x]
     elif args.config == 'all_v':
-        config_list = ['cmamba_v', 'lstm_v', 'lstm_bi_v', 'gru_v', 'smamba_v']
-        colors = ['darkblue', 'yellowgreen', 'crimson', 'darkviolet', 'orange']
+        config_list = [x.replace('.ckpt', '') for x in os.listdir(f'{ROOT}/checkpoints/') if '_v.ckpt' in x]
         init_dirs(args, 'all')
     else:
         config_list = [args.config]
@@ -186,7 +195,7 @@ if __name__ == '__main__':
             init_dirs(args, config.get('name', args.expname))
         data_config = io_tools.load_config_from_yaml(f"{ROOT}/configs/data_configs/{config.get('data_config')}.yaml")
         
-        model, normalize = load_model(config, args.ckpt_path) 
+        model, normalize = load_model(config, args.ckpt_path, config_name=conf) 
 
         use_volume = config.get('use_volume', False)
         test_transform = DataTransform(is_train=False, use_volume=use_volume)
@@ -230,16 +239,7 @@ if __name__ == '__main__':
         print(f'{conf} -- Maximum Draw Down : {round(max_drawdown(balance_in_time) * 100, 2)}')
 
         label = conf.replace("_nv", "").replace("_v", "")
-        if label == 'cmamba':
-            label = 'CryptoMamba'
-        elif label == 'lstm':
-            label = 'LSTM'
-        elif label == 'lstm_bi':
-            label = 'Bi-LSTM'
-        elif label == 'gru':
-            label = 'GRU'
-        elif label == 'smamba':
-            label = 'S-Mamba'
+        label = LABEL_DICT.get(label)
         tmp = [timstamps[0] - 24 * 60 * 60] + timstamps
         tmp = [datetime.fromtimestamp(int(x)) for x in tmp]
         sns.lineplot(x=tmp, 
