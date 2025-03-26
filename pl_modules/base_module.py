@@ -43,7 +43,7 @@ class BaseModule(pl.LightningModule):
 
     def forward(self, x, y_old=None):
         if self.mode == 'default':
-            return self.model(x)
+            return self.model(x).reshape(-1)
         elif self.mode == 'diff':
             return self.model(x).reshape(-1) + y_old
 

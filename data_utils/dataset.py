@@ -39,7 +39,7 @@ class DataConverter:
         self.config = config
         self.root = config.get('root')
         self.jumps = config.get('jumps')
-        self.date_format = config.get('date_format', "%Y-%m-%d")
+        self.date_format = config.get('date_format', "%Y-%d-%m: %H-%M")
         self.additional_features = config.get('additional_features', [])
         self.end_date = config.get('end_date')
         self.data_path = config.get('data_path')
@@ -68,8 +68,6 @@ class DataConverter:
         for i in tqdm(range(len(new_df['Close']) - 1)):
             if i + 10 >= len(new_df['Close']):
                 continue
-            for key in additional_features.keys():
-                new_df.get(key).append(additional_features.get(key))
 
             if new_df['Close'][i] > new_df['Close'][i + 10]:
                 increase = float(0)
