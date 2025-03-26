@@ -39,27 +39,29 @@ class BaseModule(pl.LightningModule):
         self.mse = nn.MSELoss()
         self.l1 = nn.L1Loss()
         self.mape = MAPE()
+        self.cel = nn.CrossEntropyLoss()
 
     def forward(self, x, y_old=None):
         if self.mode == 'default':
-            return self.model(x).reshape(-1)
+            return self.model(x)
         elif self.mode == 'diff':
             return self.model(x).reshape(-1) + y_old
 
     def training_step(self, batch, batch_idx):
         x = batch['features']
-        y = batch[self.y_key]
-        y_old = batch[f'{self.y_key}_old']
+        y = batch[self.y_key].float()
+        y_old = batch[f'{self.y_key}_old'].float()
         if self.batch_size is None:
             self.batch_size = x.shape[0]
-        y_hat = self.forward(x, y_old).reshape(-1)
+        y_hat = self.forward(x, y_old)
+        cel = self.cel(y_hat, y)
         mse = self.mse(y_hat, y)
         rmse = torch.sqrt(mse)
         mape = self.mape(y_hat, y)
         l1 = self.l1(y_hat, y)
 
         self.log("train/mse", mse.detach(), batch_size=self.batch_size, sync_dist=True, prog_bar=False)
-        self.log("train/rmse", rmse.detach(), batch_size=self.batch_size, sync_dist=True, prog_bar=True)
+        self.log("train/cel", cel.detach(), batch_size=self.batch_size, sync_dist=True, prog_bar=True)
         self.log("train/mape", mape.detach(), batch_size=self.batch_size, sync_dist=True, prog_bar=True)
         self.log("train/mae", l1.detach(), batch_size=self.batch_size, sync_dist=True, prog_bar=False)
 
@@ -71,12 +73,14 @@ class BaseModule(pl.LightningModule):
             return l1
         elif self.loss == 'mape':
             return mape
+        elif self.loss == 'cel':
+            return cel
         
     
     def validation_step(self, batch, batch_idx):
         x = batch['features']
-        y = batch[self.y_key]
-        y_old = batch[f'{self.y_key}_old']
+        y = batch[self.y_key].float()
+        y_old = batch[f'{self.y_key}_old'].float()
         if self.batch_size is None:
             self.batch_size = x.shape[0]
         y_hat = self.forward(x, y_old).reshape(-1)
@@ -84,19 +88,20 @@ class BaseModule(pl.LightningModule):
         rmse = torch.sqrt(mse)
         mape = self.mape(y_hat, y)
         l1 = self.l1(y_hat, y)
+        cel = self.cel(y_hat, y)
 
         self.log("val/mse", mse.detach(), sync_dist=True, batch_size=self.batch_size, prog_bar=False)
-        self.log("val/rmse", rmse.detach(), batch_size=self.batch_size, sync_dist=True, prog_bar=True)
+        self.log("val/cel", cel.detach(), batch_size=self.batch_size, sync_dist=True, prog_bar=True)
         self.log("val/mape", mape.detach(), batch_size=self.batch_size, sync_dist=True, prog_bar=True)
         self.log("val/mae", l1.detach(), batch_size=self.batch_size, sync_dist=True, prog_bar=False)
         return {
-            "val_loss": mse,
+            "val_loss": cel,
         }
     
     def test_step(self, batch, batch_idx):
         x = batch['features']
-        y = batch[self.y_key]
-        y_old = batch[f'{self.y_key}_old']
+        y = batch[self.y_key].float()
+        y_old = batch[f'{self.y_key}_old'].float()
         if self.batch_size is None:
             self.batch_size = x.shape[0]
         y_hat = self.forward(x, y_old).reshape(-1)
@@ -104,13 +109,14 @@ class BaseModule(pl.LightningModule):
         rmse = torch.sqrt(mse)
         mape = self.mape(y_hat, y)
         l1 = self.l1(y_hat, y)
+        cel = self.cel(y_hat, y)
 
         self.log("test/mse", mse.detach(), sync_dist=True, batch_size=self.batch_size, prog_bar=False)
-        self.log("test/rmse", rmse.detach(), batch_size=self.batch_size, sync_dist=True, prog_bar=True)
+        self.log("test/cel", cel.detach(), batch_size=self.batch_size, sync_dist=True, prog_bar=True)
         self.log("test/mape", mape.detach(), batch_size=self.batch_size, sync_dist=True, prog_bar=True)
         self.log("test/mae", l1.detach(), batch_size=self.batch_size, sync_dist=True, prog_bar=False)
         return {
-            "test_loss": mse,
+            "test_loss": cel,
         }
     
     def configure_optimizers(self):

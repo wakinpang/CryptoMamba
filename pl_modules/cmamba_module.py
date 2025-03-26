@@ -23,11 +23,11 @@ class CryptoMambaModule(BaseModule):
         lr_gamma=0.1,
         weight_decay=0.0, 
         logger_type=None,
-        window_size=14,
-        y_key='Close',
+        window_size=30,
+        y_key='Increase',
         optimizer='adam',
         mode='default',
-        loss='rmse',
+        loss='cel',
         **kwargs
     ): 
         super().__init__(lr=lr,

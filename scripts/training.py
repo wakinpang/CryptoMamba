@@ -174,9 +174,9 @@ if __name__ == "__main__":
         checkpoint_callback = pl.callbacks.ModelCheckpoint(
             save_top_k=1,
             verbose=True,
-            monitor="val/rmse",
+            monitor="val/cel",
             mode="min",
-            filename='epoch{epoch}-val-rmse{val/rmse:.4f}',
+            filename='epoch{epoch}-val-cel{val/cel:.4f}',
             auto_insert_metric_name=False,
             save_last=True
         )
@@ -190,7 +190,7 @@ if __name__ == "__main__":
                          log_every_n_steps=10,
                          logger=logger,
                          callbacks=callbacks,
-                         strategy = DDPStrategy(find_unused_parameters=False),
+                         strategy = DDPStrategy(find_unused_parameters=True, process_group_backend='gloo'),
                          )
 
     trainer.fit(model, datamodule=data_module)

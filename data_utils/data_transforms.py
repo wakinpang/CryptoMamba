@@ -4,7 +4,7 @@ import torch
 class DataTransform:
     def __init__(self, is_train, use_volume=False, additional_features=[]):
         self.is_train = is_train
-        self.keys = ['Timestamp', 'Open', 'High', 'Low', 'Close']
+        self.keys = ['Timestamp', 'Open', 'High', 'Low', 'Close', 'Increase']
         if use_volume:
             self.keys.append('Volume')
         self.keys += additional_features
@@ -22,7 +22,7 @@ class DataTransform:
                 data /= 1e9
             output[key] = data[-1]
             output[f'{key}_old'] = data[-2]
-            if key == 'Timestamp_orig':
+            if key == 'Timestamp_orig' or key == 'Increase':
                 continue
             data_list.append(data[:-1].reshape(1, -1))
         features = torch.cat(data_list, 0)

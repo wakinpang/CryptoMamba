@@ -109,7 +109,8 @@ class CMambaDataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             worker_init_fn=worker_init_fn,
             sampler=sampler,
-            drop_last=False
+            drop_last=False,
+            persistent_workers=True
         )
         return dataloader
 

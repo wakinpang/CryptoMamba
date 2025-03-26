@@ -1,0 +1,8 @@
+jumps: 1
+start_date: "2025-16-03: 20-14"
+end_date: "2025-19-03: 21-35"
+root: "./data"
+data_path: "./data/BTCUSDT_10m.csv"
+train_interval: ["2025-16-03: 20-14", "2025-18-03: 20-14"]
+val_interval: ["2025-18-03: 20-15", "2025-19-03: 08-15"]
+test_interval: ["2025-19-03: 08-16", "2025-19-03: 21-35"]
